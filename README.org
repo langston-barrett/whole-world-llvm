@@ -1,6 +1,6 @@
 * whole-world-llvm
 
-  Inspired by [[https://github.com/travitch/whole-program-llvm][whole-program-llvm]], this Nix setup helps you compile large C(++)
+  Inspired by [[https://github.com/travitch/whole-program-llvm][whole-program-llvm]], this Nix setup helps you 🌅compile large C(++)
   programs and their transitive dependencies to LLVM bitcode.
 
 ** use
@@ -13,4 +13,5 @@
    2. Create a [[https://nixos.org/nix/][Nix]] file that describes how to build your project
    3. Run the =make-bitcode= function on your code and its dependencies
       (see [[file:examples/0/bitcode.nix::{%20pkgs%20?%20import%20../../pinned-pkgs.nix%20{%20}%20}:][=examples/0/bitcode.nix=]]).
-   4. Link your files together with =llvm-link=
+   4. =nix-build= your file
+   5. Link the files in =result/*= together with =llvm-link=
