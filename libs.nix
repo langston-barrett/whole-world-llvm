@@ -2,10 +2,14 @@
 #
 # Here are some pre-configured bitcode builds.
 #
-{ pkgs ? import ./pinned-pkgs.nix { } }:
+{ pkgs        ? import ./pinned-pkgs.nix { }
+, stdenv      ? pkgs.llvmPackages_6.libcxxStdenv
+, llvm        ? pkgs.llvm_6
+, extraAttrs ? x: x
+}:
 
 let
-  makeBitcode = import ./make-bitcode.nix { inherit pkgs; };
+  makeBitcode = import ./make-bitcode.nix { inherit pkgs stdenv llvm extraAttrs; };
 in with pkgs; {
 
   # This derivation manually overrides cmakeFlags

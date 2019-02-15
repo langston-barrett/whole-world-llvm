@@ -10,6 +10,8 @@
 # session (preBuild or similar). How can we fix that?
 { pkgs ? import ./pinned-pkgs.nix { }
 , extraAttrs ? x: x
+, stdenv ? pkgs.llvmPackages_6.libcxxStdenv
+, llvm   ? pkgs.llvm_6
 }:
 
 with pkgs; drv:
@@ -19,14 +21,14 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
 # applied, we'd better hope that it included putting it in a libc++ stdenv.
 (if drv ? override
  then drv.override {
-  stdenv = llvmPackages_6.libcxxStdenv;
+   inherit stdenv;
  }
  else builtins.trace ("[WARN] Not overriding stdenv for drv " + drv.name)
       drv).overrideAttrs (oldAttrs: extraAttrs rec {
   name = "llvm-bitcode-" + (oldAttrs.name or "dummy-name");
-  buildInputs = (oldAttrs.buildInputs or []) ++ [llvm_6];
+  buildInputs = (oldAttrs.buildInputs or []) ++ [llvm];
   nativeBuildInputs = (oldAttrs.nativeBuildInputs or []) ++ [];
-  propagatedBuildInputs = (oldAttrs.buildInputs or []) ++ [llvm_6];
+  propagatedBuildInputs = (oldAttrs.buildInputs or []) ++ [llvm];
 
   # https://nixos.org/nixpkgs/manual/#sec-multiple-outputs-
   outputs = [ "out" "bitcode" ];
@@ -58,7 +60,7 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
     ${oldAttrs.preBuild or ""}
 
     export CPP="clang -E"
-    makeFlagsArray=(CFLAGS="$CFLAGS -O1 -g -save-temps -Wno-unknown-warning-option")
+    makeFlagsArray=(CFLAGS="$CFLAGS -O0 -g -save-temps -Wno-unknown-warning-option")
     makeFlagsArray=(CXXFLAGS="$CXXFLAGS -save-temps")
   '';
 
