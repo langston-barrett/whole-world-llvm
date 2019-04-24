@@ -5,7 +5,7 @@
 { pkgs        ? import ./pinned-pkgs.nix { }
 , stdenv      ? pkgs.llvmPackages_6.libcxxStdenv
 , llvm        ? pkgs.llvm_6
-, extraAttrs ? x: x
+, extraAttrs  ? x: x
 }:
 
 let

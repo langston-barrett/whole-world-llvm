@@ -36,6 +36,7 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
   # This likely wont work if the old derivation overrides CMAKE_CXX_FLAGS
   CC          = "clang";
   CXX         = "clang++";
+  CFLAGS      = "-O1 -g -save-temps=obj";
   cmakeFlags  = (oldAttrs.cmakeFlags or []) ++ [
 
     # Verbosity
@@ -49,21 +50,27 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
 
     # C++
     "-DCMAKE_CXX_COMPILER=clang++"
-    "-DCMAKE_CXX_FLAGS=-save-temps"
+    "-DCMAKE_CXX_FLAGS=-save-temps=obj"
 
     # C
     "-DCMAKE_C_COMPILER=clang"
-    "-DCMAKE_C_FLAGS=-save-temps"
+    "-DCMAKE_C_FLAGS=-save-temps=obj"
   ];
+
+  preConfigure = ''
+    ${oldAttrs.preConfigure or ""}
+
+    # See https://github.com/NixOS/nixpkgs/issues/22668
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -O1 -g -fno-threadsafe-statics -fno-inline-functions -save-temps=obj"
+  '';
 
   preBuild =  ''
     ${oldAttrs.preBuild or ""}
 
     export CPP="clang -E"
-    makeFlagsArray=(CFLAGS="$CFLAGS -O0 -g -save-temps -Wno-unknown-warning-option")
-    makeFlagsArray=(CXXFLAGS="$CXXFLAGS -save-temps")
+    makeFlagsArray=(CFLAGS="$CFLAGS -O1 -g -save-temps=obj -fno-inline-functions -Wno-unknown-warning-option")
+    makeFlagsArray=(CXXFLAGS="$CXXFLAGS -fno-threadsafe-statics -save-temps=obj")
   '';
-
 
   # https://stackoverflow.com/questions/2937407/test-whether-a-glob-has-any-matches-in-bash
   installPhase = ''
@@ -72,6 +79,12 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
     # In case the old derivation doesn't install anything to $out
     mkdir -p "$out"
     if [[ -z "$(ls $out)" ]]; then
+      touch "$out/dummy"
+    fi
+
+    # openssl workaround
+    if [[ -n $debug ]]; then
+      mkdir -p "$debug"
       touch "$out/dummy"
     fi
 
@@ -84,19 +97,31 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
                   $(find "$1" -name "*.txt") ;
       do
         echo "Copying file $file"
-        cp "$file" "$bitcode"
+        # Avoid name conflicts
+        if [[ -f $bitcode/$(basename "$file") ]]; then
+          cp "$file" "$bitcode"/2.$(basename "$file")
+
+        else
+          cp "$file" "$bitcode"
+        fi
       done
     }
     install_bitcode "$(pwd)"
 
     # Gather further information
+    # cp compile_commands.json $out
+    # cp compile_commands.json $bitcode
     cd $bitcode
     exists() {
         [ -e "$1" ]
     }
     if exists *.bc; then
-      for bc in *.bc; do llvm-dis $bc; done
-      llvm-nm *.bc > names.txt
+      for bc in *.bc; do
+        echo "Disassembling $bc"
+        (${llvm}/bin/llvm-dis $bc || true) &
+        (${llvm}/bin/llvm-nm  $bc >> names.txt || true) &
+        wait
+      done
     else
       echo 'No bitcode produced for ${oldAttrs.name}'
     fi
