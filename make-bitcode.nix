@@ -12,6 +12,9 @@
 , extraAttrs ? x: x
 , stdenv ? pkgs.llvmPackages_6.libcxxStdenv
 , llvm   ? pkgs.llvm_6
+
+, extraCFlags ? ""
+, extraCXXFlags ? ""
 }:
 
 with pkgs; drv:
@@ -61,15 +64,15 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
     ${oldAttrs.preConfigure or ""}
 
     # See https://github.com/NixOS/nixpkgs/issues/22668
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -O1 -g -fno-threadsafe-statics -fno-inline-functions -save-temps=obj"
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -O1 -g -fno-inline-functions -save-temps=obj"
   '';
 
   preBuild =  ''
     ${oldAttrs.preBuild or ""}
 
     export CPP="clang -E"
-    makeFlagsArray=(CFLAGS="$CFLAGS -O1 -g -save-temps=obj -fno-inline-functions -Wno-unknown-warning-option")
-    makeFlagsArray=(CXXFLAGS="$CXXFLAGS -fno-threadsafe-statics -save-temps=obj")
+    makeFlagsArray=(CFLAGS="$CFLAGS -O1 -g -save-temps=obj -fno-inline-functions -Wno-unknown-warning-option ${extraCFlags}")
+    makeFlagsArray=(CXXFLAGS="$CXXFLAGS -fno-threadsafe-statics -save-temps=obj ${extraCXXFlags}")
   '';
 
   # https://stackoverflow.com/questions/2937407/test-whether-a-glob-has-any-matches-in-bash
