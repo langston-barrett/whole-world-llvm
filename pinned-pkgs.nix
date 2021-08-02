@@ -1,5 +1,5 @@
 { pkgs ? import <nixpkgs> { }
-, path ? ./json/nixpkgs-18.09.json
+, path ? ./json/nixpkgs-21.05.json
 }:
 
 # We've pinned version a of nixpkgs for reproducible builds.
@@ -8,6 +8,8 @@
 
 # See this link for a tutorial:
 # https://github.com/Gabriel439/haskell-nix/tree/master/project0
+#
+# nix-shell -p nix-prefetch-git --run "nix-prefetch-git https://github.com/NixOS/nixpkgs.git 21.05 > json/nixpkgs-21.05.json"
 
 let
   nixpkgs = builtins.fromJSON (builtins.readFile path);

@@ -1,6 +1,6 @@
 * whole-world-llvm
 
-  Inspired by [[https://github.com/travitch/whole-program-llvm][whole-program-llvm]], this Nix setup helps you 🌅compile large C(++)
+  Inspired by [[https://github.com/travitch/whole-program-llvm][whole-program-llvm]], this Nix setup helps you compile large C(++)
   programs and their transitive dependencies to LLVM bitcode.
 
 ** use

@@ -5,7 +5,7 @@
 # directory.
 #
 { pkgs   ? import ./pinned-pkgs.nix { }
-, stdenv ? pkgs.llvmPackages_6.libcxxStdenv
+, stdenv ? pkgs.llvmPackages_10.libcxxStdenv
 }:
 
 let

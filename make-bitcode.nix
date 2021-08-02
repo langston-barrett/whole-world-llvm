@@ -10,15 +10,15 @@
 # session (preBuild or similar). How can we fix that?
 { pkgs ? import ./pinned-pkgs.nix { }
 , extraAttrs ? x: x
-, stdenv ? pkgs.llvmPackages_6.libcxxStdenv
-, llvm   ? pkgs.llvm_6
+, stdenv ? pkgs.llvmPackages_10.libcxxStdenv
+, llvm   ? pkgs.llvm_10
 
 , extraCFlags ? ""
 , extraCXXFlags ? ""
 }:
 
 with pkgs; drv:
-builtins.trace ("[INFO] Making bitcode for " + drv.name)
+builtins.trace ("[INFO] Making bitcode for " + drv.name or "<unknown name>")
 
 # Overrides don't compose :'( If the package has already had an override
 # applied, we'd better hope that it included putting it in a libc++ stdenv.
@@ -26,7 +26,7 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
  then drv.override {
    inherit stdenv;
  }
- else builtins.trace ("[WARN] Not overriding stdenv for drv " + drv.name)
+ else builtins.trace ("[WARN] Not overriding stdenv for drv " + drv.name or "<unknown name>")
       drv).overrideAttrs (oldAttrs: extraAttrs rec {
   name = "llvm-bitcode-" + (oldAttrs.name or "dummy-name");
   buildInputs = (oldAttrs.buildInputs or []) ++ [llvm];
@@ -126,7 +126,7 @@ builtins.trace ("[INFO] Making bitcode for " + drv.name)
         wait
       done
     else
-      echo 'No bitcode produced for ${oldAttrs.name}'
+      echo 'No bitcode produced for ${oldAttrs.name or "<unknown name>"}'
     fi
   '';
 })
